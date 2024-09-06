@@ -65,7 +65,6 @@ static
 ;
 static Task:AsyncObject_PlayerTask[MAX_PLAYERS] = {Task:0, ...};
 
-
 forward _pp@on_init@PPAsync_Objects();
 public _pp@on_init@PPAsync_Objects() {
 	wait_ticks(1);
@@ -82,7 +81,7 @@ public _pp@on_exit@PPAsync_Objects() {
     pawn_unregister_callback(AsyncAttachedObject_Handler);
 }
 
-stock Task: EditObjectAsync(playerid, objectid) {
+stock Task:EditObjectAsync(playerid, objectid) {
     pawn_call_native("EditObject", "dd", playerid, objectid);
     if(AsyncObject_PlayerTask[playerid]) {
         task_delete(AsyncObject_PlayerTask[playerid]);
