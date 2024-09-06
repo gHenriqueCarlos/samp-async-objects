@@ -21,11 +21,9 @@ Include in your code and begin using the library:
 Let's look at the following example:
 
 ```c
-YCMD:test(playerid, params[], help)
+CMD:test(playerid, params[])
 { 
-    if(help) {
-        return 0;
-    }
+
     SelectObject(playerid);
 
     return 1;
@@ -34,36 +32,81 @@ YCMD:test(playerid, params[], help)
 public OnPlayerSelectObject(playerid, type, objectid, modelid, Float:fX, Float:fY, Float:fZ)
 {
     new obj_res[e_OBJECT_INFO];
-    await_arr(obj_res) AsyncObject_Edit(playerid, objectid);
+    await_arr(obj_res) EditObjectAsync(playerid, objectid);
     print("Response awaited");
+
     if(obj_res[E_OBJECT_Response] == EDIT_RESPONSE_FINAL) {
         print("Response final, player clicked on save icon.");
     } else if(obj_res[E_OBJECT_Response] == EDIT_RESPONSE_CANCEL) {
         print("Canceled");
     }
+
     return 1;
 }
 ```
 
-The `/test` command executes the SelectObject function which allows you to select an object you would like to edit. When you select the object it calls `OnPlayerSelectObject`, GUI is going to show up and allows you to edit, move, rotate and save the object changes. If you hit a cancel or the save button, it awaits task response and when it finishes, it returns task results in an array, thus, you can check, save and modify the object. In the code above, that array way `obj_res`, which is abbreviation of `object_response`, also, we've checked if player hit save button, a.k.a `EDIT_RESPONSE_FINAL` or cancel button with obviously `EDIT_RESPONSE_FINAL` and then we simply output a message. If, for some reason, messages didn't get output, then there's most likely a problem. 
-
-The functions you're going to use are: 
+## Streamer Objects (Dynamic Object)
 
 ```c
-Task: AsyncObject_Edit(playerid, objectid)
+CMD:test(playerid, params[]){
+    new STREAMER_TAG_OBJECT:objectid = CreateDynamicObject(3632, 0.0, 0.0, 0.0);
+
+    new obj_res[e_OBJECT_INFO];
+    await_arr(obj_res) EditDynamicObjectAsync(playerid, objectid);
+
+    // bool:E_OBJECT_Playerobject,
+    // E_OBJECT_Objectid,
+    // EDIT_RESPONSE:E_OBJECT_Response,
+    // Float:E_OBJECT_X,
+    // Float:E_OBJECT_Y,
+    // Float:E_OBJECT_Z,
+    // Float:E_OBJECT_RX,
+    // Float:E_OBJECT_RY,
+    // Float:E_OBJECT_RZ
+
+    printf("EditDynamicObjectAsync objectid %d", obj_res[E_OBJECT_Objectid]);
+
+    if(obj_res[E_OBJECT_Response] == EDIT_RESPONSE_FINAL){
+        SetDynamicObjectPos(objectid, obj_res[E_OBJECT_X], obj_res[E_OBJECT_Y], obj_res[E_OBJECT_Z], obj_res[E_OBJECT_RX], obj_res[E_OBJECT_RY], obj_res[E_OBJECT_RZ]);
+    }else if(obj_res[E_OBJECT_Response] == EDIT_RESPONSE_CANCEL){
+        // Cancel 
+    }
+}
 ```
 
-The params are obvious, the function also has a wrapper. By defining `ASYNC_OBJECT_SYNTAX_EDIT` you allow yourself to use it:
+## Player Attached objects
+
+```c
+CMD:test(playerid, params[]){
+    new obj_res[e_ATTACHED_OBJECT_INFO];
+    await_arr(obj_res) EditAttachedObjectAsync(playerid, INDEX_HERE);
+
+    // EDIT_RESPONSE:E_OBJECT_Response,
+    // E_OBJECT_Index,
+    // E_OBJECT_Modelid,
+    // E_OBJECT_Boneid,
+    // Float:E_OBJECT_X,
+    // Float:E_OBJECT_Y,
+    // Float:E_OBJECT_Z,
+    // Float:E_OBJECT_RX,
+    // Float:E_OBJECT_RY,
+    // Float:E_OBJECT_RZ,
+    // Float:E_OBJECT_ScaleX,
+    // Float:E_OBJECT_ScaleY,
+    // Float:E_OBJECT_ScaleZ
+
+    printf("EditAttachedObjectAsync modelid %d, boneid %d", obj_res[E_OBJECT_Modelid], obj_res[E_OBJECT_Boneid]);
+
+    if(obj_res[E_OBJECT_Response] == EDIT_RESPONSE_FINAL){
+        // save
+    }else if(obj_res[E_OBJECT_Response] == EDIT_RESPONSE_CANCEL){
+        // Cancel 
+    }
+}
 ```
-Task: EditObjectAsync(playerid, objectid)
-```
 
-*Note: You've to put `OnPlayerEditObject` callback in your script.*
-
-## Testing
-
-To test, simply run the package, connect to a server and then execute /test:
-
-```bash
-sampctl package run
+```c
+Task:EditObjectAsync(playerid, objectid) > *required callback: OnPlayerEditObject*
+Task:EditDynamicObjectAsync(playerid, STREAMER_TAG_OBJECT:objectid)  > *required callback: OnPlayerEditDynamicObject*
+Task:EditAttachedObjectAsync(playerid, index)  > *required callback: OnPlayerEditAttachedObject*
 ```
